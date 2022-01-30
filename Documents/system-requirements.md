@@ -1,0 +1,13 @@
+# System Requirements
+* The system shall provide a display. [E2E-SYS-1]
+* The system shall provide a camera. [E2E-SYS-2]
+* The system shall provide for user input. [E2E-SYS-3]
+* The system shall allow the user to input messages as text. [E2E-SYS-4]
+* The system shall allow the user to capture data sent from other users. [E2E-SYS-5]
+* The system shall encrypt outgoing messages. [E2E-SYS-6]
+* The system shall decrypt incoming messages. [E2E-SYS-7]
+* The system shall encrypt and decrypt messages using session-based key material. [E2E-SYS-8]
+* The system shall allow for re-establishment of session key material. [E2E-SYS-9]
+* The system shall establish sessions via an cryptographic authentication mechanism. [E2E-SYS-10]
+* The system shall provide for secure generation of public key cryptography material. [E2E-SYS-11]
+* The system shall provide for a secure exchange mechanism for public key cryptography material. [E2E-SYS-12]
