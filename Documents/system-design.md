@@ -8,8 +8,6 @@ Requirements for this system can be found in the [System Requirements Document](
 
 ## System Architecture
 
-![System Diagram](/Images/System-Diagram.png)
-
 ### System Components
 
 The system will consist of two primary components, the Host Device and the Communication Channel Device.
