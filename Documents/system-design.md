@@ -61,6 +61,7 @@ Use of the system will follow this scheme:
     4. User B will receive via their Communication Channel Device and scan the visual representation with their Host Device.
     5. User B's Host Device will decrypt the with the session's shared secret and display a plain text representation.
 6. At any time, User A or B may request a new session establishment.
+    1. The system will automatically perform this action on a configurable timeout.
 
 ### System Deployment
 
