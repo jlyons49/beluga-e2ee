@@ -6,10 +6,10 @@ This is the repository for an End-to-End Encryption solution implemented for a G
 
 * Python 3.10 (May be backwards compatible but untested)
 * Python modules:
-    * [Cryptography](https://pypi.org/project/cryptography/)
-    * [qrcode](https://pypi.org/project/qrcode/)
-    * opencv-python
-    * [pyzbar](https://pypi.org/project/pyzbar/)
+  * [Cryptography](https://pypi.org/project/cryptography/)
+  * [qrcode](https://pypi.org/project/qrcode/)
+  * [pyzbar](https://pypi.org/project/pyzbar/)
+* OpenCV 4.4
 
 ## Documents
 
