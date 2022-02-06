@@ -68,3 +68,21 @@ Use of the system will follow this scheme:
 ### System Deployment
 
 The system will be deployed via a preconfigured image which includes all software and tools necessary to utilize the system.
+
+## Cryptographic Implementation
+
+### Crypto Overview
+
+This system seeks to maximize confidentiality of messages while maintaining an acceptable level of ease-of-use. It is important that the system be usable.
+
+For maximizing confidentiality, the first layer of implementation will require a strong symmetric cryptography scheme. Ideally, this scheme will additionally provide integtriy guarantees. As such, [AES-GCM](https://en.wikipedia.org/wiki/Galois/Counter_Mode) with 256-bit key will be utilized in this system. While this strong symmetric cryptography provides good encryption, its exclusive use would result in a lack of [forward secrecy](https://en.wikipedia.org/wiki/Forward_secrecy). In order to achieve forward secrecy, the system will need to establish sessions with a new symmetric key for each session. This session establishment must utilize some for of secret agreement, such as the [Diffie-Hellman key exchange](https://en.wikipedia.org/wiki/Diffie%E2%80%93Hellman_key_exchange); however, the base DH key exchange does not inherently provide forward secrecy, nor does it guarantee autheticity of the parties to each other. To resolve the first issue, a new private secret must be chosen for each session establishment; this is referred to as the ephemeral variant of DH. To resolve the issue of authenticity, a signing algorithm must be applied in addition to DH. A scheme such as [RSA](https://en.wikipedia.org/wiki/RSA_(cryptosystem)) or [ECDSA](https://en.wikipedia.org/wiki/Elliptic_Curve_Digital_Signature_Algorithm) can provide this capability.
+
+Every data transmission requires manual intervention by a user, so any scheme requiring a high number of transactions for use would be prohibitive, eliminating the available of some complex schemes. Performance in this regard can be improved eliminating some exchanges that are utilized in other systems at the expense of optimal security. For example, the system may set static agreements on the precise crypto schemes to be used or the particular curves to be used for elliptic curve components.
+
+### Crypto Suite
+
+The crypto suite to be utilized in this system consists of the following:
+
+* Session Authentication: Elliptic Curve Digital Signature Algorithm (ECDSA)
+* Session Secret Establishment: Elliptic Curve Diffie-Hellman, Ephemeral (ECDHE)
+* Session Encryption and Integrity: AES-256, Galois Counter Mode (AES-GCM)
