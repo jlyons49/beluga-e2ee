@@ -15,6 +15,7 @@ else:
         print("Argument is not a string!")
         quit()
 
+if len(secret_message)%16 != 0 : secret_message = secret_message + b'`'
 while len(secret_message)%16 != 0 :
     secret_message = secret_message + b'0'
 
