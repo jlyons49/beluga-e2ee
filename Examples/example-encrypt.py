@@ -1,8 +1,6 @@
-from dataclasses import InitVar
 import os
 import sys
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
-from cryptography.hazmat.backends import default_backend
 import json
 import base64
 
@@ -32,14 +30,17 @@ iv85 = base64.b85encode(iv).decode('ascii')
 print("key (b85): " + key85)
 print("iv (b85): " + iv85)
 
-# Generate the ciphertext
-cipher = Cipher(algorithms.AES(key), modes.CBC(iv), default_backend())
+# Generate the ciphertext and tag
+cipher = Cipher(algorithms.AES(key), modes.GCM(iv))
 encryptor = cipher.encryptor()
 ct = encryptor.update(secret_message) + encryptor.finalize()
 ct85 = base64.b85encode(ct).decode('ascii')
 print("cyphertext (b85): " + ct85)
+tag = encryptor.tag
+tag85 = base64.b85encode(tag).decode('ascii')
+print("tag (b85): " + tag85)
 
 # Save the output to a file
-data = {"key":key85, "iv":iv85, "ct":ct85}
+data = {"key":key85, "iv":iv85, "ct":ct85, "tag":tag85}
 with open("dataFile.json","w") as dataFile:
     json.dump(data, dataFile)
