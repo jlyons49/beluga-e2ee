@@ -14,6 +14,7 @@ else:
     mode = sys.argv[1]
     filename = sys.argv[2]
 
+# Mode 0 generates a public key for use in another user's mode 1, then waits to receive their public key
 if mode == "0":
     privateKey = ec.generate_private_key(ec.SECP384R1())
     privateKeyPEM = privateKey.private_bytes(Encoding.PEM, PrivateFormat.PKCS8, BestAvailableEncryption(b'nothanks')).decode('ascii')
@@ -36,6 +37,7 @@ if mode == "0":
         json.dump(jsondata, dataFile)
     print("Session Key: " + shared_key85)
 
+# Mode 1 receives another user's public key, generates a public key itself, and generates the shared secret
 elif mode == "1":
     dataFile = open(filename)
     jsondata = json.load(dataFile)
@@ -62,6 +64,7 @@ elif mode == "1":
         json.dump(jsondata, dataFile)
     print("Session Key: " + shared_key85)
 
+# Mode 4 generates a public key for use in another user's mode 1 and stores the private key for mode 5
 if mode == "4":
     privateKey = ec.generate_private_key(ec.SECP384R1())
     privateKeyPEM = privateKey.private_bytes(Encoding.PEM, PrivateFormat.PKCS8, BestAvailableEncryption(b'nothanks')).decode('ascii')
@@ -75,6 +78,7 @@ if mode == "4":
     with open('myPrivKey.json',"w") as dataFile:
         json.dump(jsondata, dataFile)
 
+# Mode 5 receives a public key, opens the stored private key, and generates the shared secret
 elif mode == "5":
     dataFile = open('myPrivKey.json')
     jsondata = json.load(dataFile)
