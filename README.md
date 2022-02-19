@@ -9,7 +9,7 @@ This is the repository for an End-to-End Encryption solution implemented for a G
   * [Cryptography](https://pypi.org/project/cryptography/)
   * [qrcode](https://pypi.org/project/qrcode/)
   * [pyzbar](https://pypi.org/project/pyzbar/)
-* OpenCV 4.4
+* [OpenCV 4.5.4](https://qengineering.eu/install-opencv-4.5-on-raspberry-pi-4.html)
 
 ## Documents
 
