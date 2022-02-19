@@ -22,6 +22,12 @@ print("msg with pad: \"" + secret_message.decode('ASCII') + "\"")
 
 # Load key (static for now)
 key = os.urandom(32)
+try:
+    sessionFile = open("sessionFile.json","r")
+    data = json.load(sessionFile)
+    key = base64.b85decode(data['sessionKey'])
+except:
+    print("Using random key!")
 key85 = base64.b85encode(key).decode('ascii')
 
 # Create random key and IV (should be replaced with more secure method later)

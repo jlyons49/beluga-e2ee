@@ -35,7 +35,7 @@ if mode == "0":
     shared_key85 = base64.b85encode(shared_key).decode('ascii')
     print("Generating Session Key File...")
     jsondata = {"sessionKey":shared_key85}
-    with open('sessionFile1.json',"w") as dataFile:
+    with open('sessionFile.json',"w") as dataFile:
         json.dump(jsondata, dataFile)
     print("Session Key: " + shared_key85)
 
@@ -54,7 +54,7 @@ elif mode == "1":
     shared_key85 = base64.b85encode(shared_key).decode('ascii')
     print("Generating Session Key File...")
     jsondata = {"sessionKey":shared_key85}
-    with open('sessionFile2.json',"w") as dataFile:
+    with open('sessionFile.json',"w") as dataFile:
         json.dump(jsondata, dataFile)
     print("Session Key: " + shared_key85)
 
@@ -81,7 +81,7 @@ elif mode == "2":
     shared_key85 = base64.b85encode(shared_key).decode('ascii')
     print("Generating Session Key File...")
     jsondata = {"sessionKey":shared_key85}
-    with open('sessionFile2.json',"w") as dataFile:
+    with open('sessionFile.json',"w") as dataFile:
         json.dump(jsondata, dataFile)
     print("Session Key: " + shared_key85)
 
@@ -115,6 +115,6 @@ elif mode == "5":
     shared_key85 = base64.b85encode(shared_key).decode('ascii')
     print("Generating Session Key File...")
     jsondata = {"sessionKey":shared_key85}
-    with open('sessionFile2.json',"w") as dataFile:
+    with open('sessionFile.json',"w") as dataFile:
         json.dump(jsondata, dataFile)
     print("Session Key: " + shared_key85)
