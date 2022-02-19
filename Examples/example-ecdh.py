@@ -9,9 +9,11 @@ import sys
 
 if len(sys.argv) < 2:
     mode = input("Please input mode: ")
-    filename = input("Please input output file name: ")
 else:
     mode = sys.argv[1]
+if len(sys.argv) < 3:
+    filename = input("Please input output file name: ")
+else:
     filename = sys.argv[2]
 
 # Mode 0 generates a public key for use in another user's mode 1, then waits to receive their public key
@@ -33,12 +35,31 @@ if mode == "0":
     shared_key85 = base64.b85encode(shared_key).decode('ascii')
     print("Generating Session Key File...")
     jsondata = {"sessionKey":shared_key85}
-    with open('sessionFile2.json',"w") as dataFile:
+    with open('sessionFile1.json',"w") as dataFile:
         json.dump(jsondata, dataFile)
     print("Session Key: " + shared_key85)
 
 # Mode 1 receives another user's public key, generates a public key itself, and generates the shared secret
 elif mode == "1":
+    rxPublicKey = input("Please enter received base85 encoded public key: ")
+    rxPublicKey = base64.b85decode(rxPublicKey)
+    rxPublicKey = ec.EllipticCurvePublicKey.from_encoded_point(ec.SECP384R1(), rxPublicKey)
+    
+    privateKey = ec.generate_private_key(ec.SECP384R1())
+    publicKey = privateKey.public_key().public_bytes(Encoding.X962, PublicFormat.CompressedPoint)
+    pubKey85 = base64.b85encode(publicKey).decode('ascii')
+    print("Public Key: " + pubKey85)
+    
+    shared_key = HKDF(hashes.SHA256(), 32,None,None).derive(privateKey.exchange(ec.ECDH(), rxPublicKey))
+    shared_key85 = base64.b85encode(shared_key).decode('ascii')
+    print("Generating Session Key File...")
+    jsondata = {"sessionKey":shared_key85}
+    with open('sessionFile2.json',"w") as dataFile:
+        json.dump(jsondata, dataFile)
+    print("Session Key: " + shared_key85)
+
+# Mode 2 receives another user's public key, generates a public key itself, and generates the shared secret
+elif mode == "2":
     dataFile = open(filename)
     jsondata = json.load(dataFile)
     mode = base64.b85decode(jsondata['mode'])
@@ -60,7 +81,7 @@ elif mode == "1":
     shared_key85 = base64.b85encode(shared_key).decode('ascii')
     print("Generating Session Key File...")
     jsondata = {"sessionKey":shared_key85}
-    with open('sessionFile1.json',"w") as dataFile:
+    with open('sessionFile2.json',"w") as dataFile:
         json.dump(jsondata, dataFile)
     print("Session Key: " + shared_key85)
 
