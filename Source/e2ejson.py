@@ -5,6 +5,8 @@ import unittest
 import random
 import base64
 
+signingFile = "signingKey.json"
+
 def saveSessionKey(id: str, key: bytes):
     try:
         jsonFile = open("sessionFile.json", "r")
@@ -58,6 +60,44 @@ def getSigningKey():
     
     return data["signingKey"]
 
+def storePublicKey(id, public_key):
+    try:
+        jsonFile = open("publicKeys.json", "r")
+        data = json.load(jsonFile)
+        jsonFile.close()
+    except:
+        data = {}
+
+    data[id] = base64.b85encode(public_key).decode('ascii')
+
+    with open("publicKeys.json", "w") as jsonFile:
+        json.dump(data, jsonFile, indent="")
+
+def getPublicKey(id):
+    try:
+        jsonFile = open("publicKeys.json", "r")
+        data = json.load(jsonFile)
+        jsonFile.close()
+    except:
+        raise RuntimeError('No public key for provided id')
+    
+    return base64.b85decode(data[id])
+
+def removePublicKey(id):
+    try:
+        jsonFile = open("publicKeys.json", "r")
+        data = json.load(jsonFile)
+        jsonFile.close()
+    except:
+        return -1
+
+    data.pop(id)
+
+    with open("publicKeys.json", "w") as jsonFile:
+        json.dump(data, jsonFile, indent="")
+    
+    return 0
+
 class TestE2EJson(unittest.TestCase):
     def test_save_and_load_session(self):
         id = str('').join(random.choices('123456789', k=16))
@@ -72,3 +112,11 @@ class TestE2EJson(unittest.TestCase):
         setSigningKey(key)
         key2 = getSigningKey()
         self.assertEqual(key, key2)
+
+    def test_save_and_load_publicKey(self):
+        id = str('').join(random.choices('123456789', k=16))
+        key = os.urandom(84)
+        storePublicKey(id, key)
+        key2 = getPublicKey(id)
+        self.assertEqual(key, key2)
+        removePublicKey(id)

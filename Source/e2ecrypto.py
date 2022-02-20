@@ -5,14 +5,41 @@ import cryptography
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import ec
+from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
+from cryptography.hazmat.primitives.kdf.hkdf import HKDF
 import cryptography.exceptions
-import json
-import base64
 import unittest
 import random
 
 def generatePrivateKey():
     return ec.generate_private_key(ec.SECP384R1())
+
+def getMyPublicKey(private_key: ec.EllipticCurvePrivateKey):
+    try: 
+        return private_key.public_key()
+    except:
+        raise TypeError('generatePublicKey: must provide EllipticCurvePrivateKey')
+
+def publicKeyToBytes(public_key: ec.EllipticCurvePublicKey):
+    return public_key.public_bytes(Encoding.X962, PublicFormat.CompressedPoint)
+
+def bytesToPublicKey(public_key_bytes: bytes):
+    return ec.EllipticCurvePublicKey.from_encoded_point(ec.SECP384R1(), public_key_bytes)
+
+def initiateECDH():
+    private_key = generatePrivateKey()
+    public_key = getMyPublicKey(private_key)
+
+    return private_key,public_key
+
+def completeECDH(private_key: ec.EllipticCurvePrivateKey, received_public_key: ec.EllipticCurvePublicKey):
+    public_key = 0
+    if private_key == None:
+        private_key = generatePrivateKey()
+        public_key = getMyPublicKey(private_key)
+    shared_key = HKDF(hashes.SHA256(), 32,None,None).derive(private_key.exchange(ec.ECDH(), received_public_key))
+
+    return shared_key, public_key
 
 # Encrypts the byte array secret_message with key
 def encrypt(secret_message, key):
@@ -48,10 +75,12 @@ def decrypt(ciphertext, iv, tag, key):
     return plaintext
 
 def sign(byte_array, private_key: ec.EllipticCurvePrivateKey):
-    return private_key.sign(byte_array, ec.ECDSA(hashes.SHA256()))
-
-def signString(string, private_key: ec.EllipticCurvePrivateKey):
-    return private_key.sign(bytes(string, 'ascii'), ec.ECDSA(hashes.SHA256()))
+    if isinstance(byte_array, str):
+        return private_key.sign(bytes(byte_array, 'ascii'), ec.ECDSA(hashes.SHA256()))
+    elif isinstance(byte_array, bytes):
+        return private_key.sign(byte_array, ec.ECDSA(hashes.SHA256()))
+    else:
+        raise TypeError    
 
 def verify(byte_array: bytes, signature: bytes, pubic_key: ec.EllipticCurvePublicKeyWithSerialization):
     try :
@@ -96,4 +125,8 @@ class TestE2ECrypto(unittest.TestCase):
         signature = sign(testString,private_key)
         self.assertEqual(verify(testString,signature,public_key),0)
         
-
+    def test_ECDH(self):
+        private_key, public_key_1 = initiateECDH()
+        shared_key_1, public_key_2 = completeECDH(None, public_key_1)
+        shared_key_2, pkholder = completeECDH(private_key, public_key_2)
+        self.assertEqual(shared_key_1,shared_key_2)
