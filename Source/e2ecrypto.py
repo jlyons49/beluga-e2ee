@@ -6,6 +6,7 @@ from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
+from cryptography.hazmat.primitives.serialization import PrivateFormat, load_pem_private_key, BestAvailableEncryption
 from cryptography.hazmat.primitives.kdf.hkdf import HKDF
 import cryptography.exceptions
 import unittest
@@ -19,6 +20,14 @@ def getMyPublicKey(private_key: ec.EllipticCurvePrivateKey):
         return private_key.public_key()
     except:
         raise TypeError('generatePublicKey: must provide EllipticCurvePrivateKey')
+
+def privateKeyToPEM(private_key: ec.EllipticCurvePrivateKey):
+    return private_key.private_bytes(Encoding.PEM, PrivateFormat.PKCS8, BestAvailableEncryption(b'e2e-system')).decode('ascii')
+
+def privateKeyFromPEM(pem_private_key: str):
+    pem_bytes = bytes(pem_private_key, 'ascii')
+    private_key = load_pem_private_key(pem_bytes, password=b'e2e-system')
+    return private_key
 
 def publicKeyToBytes(public_key: ec.EllipticCurvePublicKey):
     return public_key.public_bytes(Encoding.X962, PublicFormat.CompressedPoint)
