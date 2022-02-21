@@ -107,6 +107,7 @@ class TestE2EJson(unittest.TestCase):
         self.assertEqual(key, key2)
         removeSession(id)
 
+    @unittest.skip('Skipping to prevent signing key destruction')
     def test_save_and_load_signingKey(self):
         key = base64.b85encode(os.urandom(384)).decode('ascii')
         setSigningKey(key)
