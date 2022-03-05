@@ -66,6 +66,14 @@ def acceptSessionInit(userId, active_private_key):
     print("\n\n")
     saveSessionKey(userId, shared_secret)
 
+def sharePublicKeys(user_id):
+    publicKey = publicKeyToBytes(getMyPublicKey(privateKeyFromPEM(getSigningKey())))
+    print('\n----------------------------------')
+    print("Share this public key (b85):\n" + base64.b85encode(publicKey).decode('ascii'))
+    print('----------------------------------\n')
+    recPublicKey = input("Please enter provided public key: ")
+    storePublicKey(user_id, base64.b85decode(recPublicKey))
+
 def main():
     try:
         signingkeyPEM = getSigningKey()
@@ -118,7 +126,8 @@ def main():
             acceptSessionInit(user_id, ActivePrivateSecret)
             continue
         if(chosen_mode == '6'):
-            print("not yet implemented")
+            user_id = input('Provide user_id for shared user: ')
+            sharePublicKeys(user_id)
             continue
         if(chosen_mode == '7'):
             print("Thanks for using your friendly E2E Application!")
