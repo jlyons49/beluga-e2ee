@@ -35,33 +35,57 @@ def receiveEncryptedMessage(user_id, encrypted_message, iv, tag):
 
 # TODO: Move to other module
 def initializeSession(userId):
-    PrivateKey, PublicKey = initiateECDH()
-    public_key_bytes = publicKeyToBytes(PublicKey)
+    try:
+        publicKey = bytesToPublicKey(getPublicKey(userId))
+    except RuntimeError:
+        print("\n\ERROR: No public key for provided id!\n\n")
+        return None
+    PrivateSecret, PublicSecret = initiateECDH()
+    public_secret_bytes = publicKeyToBytes(PublicSecret)
+    signature = sign(public_secret_bytes,privateKeyFromPEM(getSigningKey()))
     print("\n\n")
-    print("Please provide this public secret to the other user:\n----------\n" + base64.b85encode(public_key_bytes).decode('ascii'))
+    print("Please provide this public secret to the other user:\n----------\n" + base64.b85encode(public_secret_bytes).decode('ascii'))
+    print("\nPlease provide this signature to the other user:\n----------\n" + base64.b85encode(signature).decode('ascii'))
     print("\n\n")
     recevied_secret_b85 = input("Please enter provided secret (or enter to delay): ")
     if(recevied_secret_b85 == ""):
-        return PrivateKey
+        return PrivateSecret
     received_secret_bytes = base64.b85decode(recevied_secret_b85)
+    recevied_signature_b85 = input("Please enter provided signature: ")
+    recevied_signature_bytes = base64.b85decode(recevied_signature_b85)
+    if(verify(received_secret_bytes,recevied_signature_bytes,publicKey) == False):
+        print("\n----------\nERROR: Failed to verify signature!\n----------\n")
+        return None
     received_secret = bytesToPublicKey(received_secret_bytes)
-    shared_secret,pkholder = completeECDH(PrivateKey, received_secret)
+    shared_secret,pkholder = completeECDH(PrivateSecret, received_secret)
     print("\n\n")
     print("Session Initialized for user: "+ userId)
     print("\n\n")
     saveSessionKey(userId, shared_secret)
-    return PrivateKey
+    return PrivateSecret
 
 def acceptSessionInit(userId, active_private_key):
+    try:
+        publicKey = bytesToPublicKey(getPublicKey(userId))
+    except RuntimeError:
+        print("\n\ERROR: No public key for provided id!\n\n")
+        return None
+
     print("\n\n")
     recevied_secret_b85 = input("Please enter provided secret: ")
     received_secret_bytes = base64.b85decode(recevied_secret_b85)
+    
+    # Verify the received secret
+    received_secret_bytes = base64.b85decode(recevied_secret_b85)
+    recevied_signature_b85 = input("Please enter provided signature: ")
+    recevied_signature_bytes = base64.b85decode(recevied_signature_b85)
+    if(verify(received_secret_bytes,recevied_signature_bytes,publicKey) == False):
+        print("\n----------\nERROR: Failed to verify signature!\n----------\n")
+        return None
+
+    # Calculate Shared Secret
     received_secret = bytesToPublicKey(received_secret_bytes)
     shared_secret, public_secret = completeECDH(active_private_key, received_secret)
-    public_secret_bytes = publicKeyToBytes(public_secret)
-    print("\n\n")
-    print("Please provide this public secret to the other user:\n----------\n" + base64.b85encode(public_secret_bytes).decode('ascii'))
-    print("\n\n")
     print("Session Initialized for user: "+ userId)
     print("\n\n")
     saveSessionKey(userId, shared_secret)
@@ -133,8 +157,5 @@ def main():
             print("Thanks for using your friendly E2E Application!")
             exit()
     
-
-
-
 if __name__ == "__main__":
     main()
