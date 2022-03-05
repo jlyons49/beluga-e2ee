@@ -78,11 +78,10 @@ def getPublicKey(id):
         jsonFile = open("publicKeys.json", "r")
         data = json.load(jsonFile)
         jsonFile.close()
-    except:
+        return base64.b85decode(data[id])
+    except KeyError:
         raise RuntimeError('No public key for provided id')
     
-    return base64.b85decode(data[id])
-
 def removePublicKey(id):
     try:
         jsonFile = open("publicKeys.json", "r")
