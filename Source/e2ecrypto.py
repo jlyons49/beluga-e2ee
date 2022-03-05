@@ -95,8 +95,9 @@ def verify(byte_array: bytes, signature: bytes, pubic_key: ec.EllipticCurvePubli
     try :
         pubic_key.verify(signature, byte_array, ec.ECDSA(hashes.SHA256()))
     except cryptography.exceptions.InvalidSignature:
-        print("INVALID SIGNATURE")
-    return 0
+        #print("INVALID SIGNATURE")
+        return False
+    return True
 
 class TestE2ECrypto(unittest.TestCase):
     def test_encrypt_then_decrypt(self):
