@@ -9,8 +9,6 @@ from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
 from cryptography.hazmat.primitives.serialization import PrivateFormat, load_pem_private_key, BestAvailableEncryption
 from cryptography.hazmat.primitives.kdf.hkdf import HKDF
 import cryptography.exceptions
-import unittest
-import random
 
 def generatePrivateKey():
     return ec.generate_private_key(ec.SECP384R1())
@@ -99,44 +97,3 @@ def verify(byte_array: bytes, signature: bytes, pubic_key: ec.EllipticCurvePubli
         return False
     return True
 
-class TestE2ECrypto(unittest.TestCase):
-    def test_encrypt_then_decrypt(self):
-        testString = str("This is just a test").encode('ASCII')
-        key = os.urandom(32)
-        encrypted, iv, tag = encrypt(testString, key)
-        decrypted = decrypt(encrypted, iv, tag, key)
-        self.assertEqual(testString, bytes(decrypted))
-    
-    def test_longencrypt(self):
-        testString = str('').join(random.choices('123456789', k=32768)).encode('ASCII')
-        key = os.urandom(32)
-        encrypted, iv, tag = encrypt(testString, key)
-        self.assertNotEqual(testString,encrypted)
-        self.assertEqual(len(encrypted),32768)
-
-    def test_decrypt_tag_failure(self):
-        testString = str("This is just a test").encode('ASCII')
-        key = os.urandom(32)
-        encrypted, iv, tag = encrypt(testString, key)
-        with self.assertRaises(RuntimeError):
-            decrypt(encrypted, iv, b'0'*16, key)
-
-    def test_decrypt_key_failure(self):
-        testString = str("This is just a test").encode('ASCII')
-        key = os.urandom(32)
-        encrypted, iv, tag = encrypt(testString, key)
-        with self.assertRaises(RuntimeError):
-            decrypt(encrypted, iv, tag, bytearray(32))
-
-    def test_sign_and_verify(self):
-        testString = str('').join(random.choices('123456789', k=32768)).encode('ASCII')
-        private_key = generatePrivateKey()
-        public_key = private_key.public_key()
-        signature = sign(testString,private_key)
-        self.assertEqual(verify(testString,signature,public_key),0)
-        
-    def test_ECDH(self):
-        private_key, public_key_1 = initiateECDH()
-        shared_key_1, public_key_2 = completeECDH(None, public_key_1)
-        shared_key_2, pkholder = completeECDH(private_key, public_key_2)
-        self.assertEqual(shared_key_1,shared_key_2)

@@ -96,27 +96,3 @@ def removePublicKey(id):
         json.dump(data, jsonFile, indent="")
     
     return 0
-
-class TestE2EJson(unittest.TestCase):
-    def test_save_and_load_session(self):
-        id = str('').join(random.choices('123456789', k=16))
-        key = os.urandom(32)
-        saveSessionKey(id,key)
-        key2 = getSessionKey(id)
-        self.assertEqual(key, key2)
-        removeSession(id)
-
-    @unittest.skip('Skipping to prevent signing key destruction')
-    def test_save_and_load_signingKey(self):
-        key = base64.b85encode(os.urandom(384)).decode('ascii')
-        setSigningKey(key)
-        key2 = getSigningKey()
-        self.assertEqual(key, key2)
-
-    def test_save_and_load_publicKey(self):
-        id = str('').join(random.choices('123456789', k=16))
-        key = os.urandom(84)
-        storePublicKey(id, key)
-        key2 = getPublicKey(id)
-        self.assertEqual(key, key2)
-        removePublicKey(id)
