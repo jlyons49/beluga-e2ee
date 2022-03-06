@@ -194,8 +194,7 @@ def camTest():
     while True:
         # get the image
         _, img = cap.read()
-        img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        minx, maxx, miny, maxy = None, None, None, None
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         h = int(img.shape[0]*.5)
         w = int(img.shape[1]*.5)
         img = cv2.resize(img,(w,h),interpolation=cv2.INTER_LINEAR)
@@ -263,11 +262,10 @@ def main():
             continue
         if(chosen_mode == '2'):
             user_id = input('Provide source user_id: ')
-            # encrypted_message = input('Enter Encrypted Message: ')
-            # iv = input('Enter IV: ')
-            # tag = input('Enter Tag: ')
-            #receiveEncryptedMessage(user_id, encrypted_message, iv, tag)
-            receiveEncryptedQRCode(user_id)
+            encrypted_message = input('Enter Encrypted Message: ')
+            iv = input('Enter IV: ')
+            tag = input('Enter Tag: ')
+            receiveEncryptedMessage(user_id, encrypted_message, iv, tag)
             continue
         if(chosen_mode == '3'):
             user_id = input('Provide destination user_id: ')
