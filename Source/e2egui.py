@@ -17,17 +17,22 @@ def produceQRCode(qrmsg):
     qr.add_data(qrmsg)
     qr.make(fit=True)
     code = qr.make_image(fill_color="black", back_color="#dddddd")
-    code.save("testqr.png")
-    img = cv2.imread('testqr.png')
-    window_name = 'projector'
-    cv2.namedWindow(window_name, cv2.WND_PROP_FULLSCREEN)
-    cv2.moveWindow(window_name, screen.x - 1, screen.y - 1)
-    cv2.setWindowProperty(window_name, cv2.WND_PROP_FULLSCREEN,
-                          cv2.WINDOW_FULLSCREEN)
-    img = cv2.resize(img,(height,height),interpolation=cv2.INTER_LINEAR)
-    cv2.imshow(window_name, img)
-    cv2.waitKey(0) # waits until a key is pressed
-    cv2.destroyAllWindows() # destroys the window showing image
+    code.save("qr.png")
+    if(screen != None):
+        img = cv2.imread('qr.png')
+        window_name = 'projector'
+        cv2.namedWindow(window_name, cv2.WND_PROP_FULLSCREEN)
+        cv2.moveWindow(window_name, screen.x - 1, screen.y - 1)
+        cv2.setWindowProperty(window_name, cv2.WND_PROP_FULLSCREEN,
+                            cv2.WINDOW_FULLSCREEN)
+        img = cv2.resize(img,(height,height),interpolation=cv2.INTER_LINEAR)
+        cv2.imshow(window_name, img)
+        cv2.waitKey(0) # waits until a key is pressed
+        cv2.destroyAllWindows() # destroys the window showing image
+    else:
+        print('-------------------------------------------------\n')
+        print("No screen available, please open qr.png to share.")
+        print('-------------------------------------------------\n')
 
 # TODO: Move to other module
 def sendEncryptedMessage(user_id, secret_message):
