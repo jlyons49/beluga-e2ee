@@ -16,12 +16,11 @@ def produceQRCode(qrmsg):
     qr = qrcode.QRCode(version=None,error_correction=qrcode.constants.ERROR_CORRECT_L,border=1,)
     qr.add_data(qrmsg)
     qr.make(fit=True)
-    code = qr.make_image()
+    code = qr.make_image(fill_color="black", back_color="#dddddd")
     code.save("testqr.png")
     img = cv2.imread('testqr.png')
     window_name = 'projector'
     cv2.namedWindow(window_name, cv2.WND_PROP_FULLSCREEN)
-    print(screen)
     cv2.moveWindow(window_name, screen.x - 1, screen.y - 1)
     cv2.setWindowProperty(window_name, cv2.WND_PROP_FULLSCREEN,
                           cv2.WINDOW_FULLSCREEN)
@@ -65,15 +64,19 @@ def receiveEncryptedMessage(user_id, encrypted_message, iv, tag):
     print("This is your secret message:\n----------\n" + message_bytes.decode('ASCII'))
     print("\n\n")
 
-def receiveQRCode():
+def receiveQRCode(ActivePrivateSecret):
     user_id = input("Please specify source user id: ")
     data = camTest()
     try:
         mode = data['mode']
     except:
         print("Invalid QR Code!")
+        return
     if mode == 1:
         receiveEncryptedMessage(user_id, data['ct'],data['iv'],data['tag'])
+        return
+    if mode == 3:
+        acceptSessionInit(user_id, ActivePrivateSecret, data['sec'], data['sig'])
         return
     return
 
@@ -101,10 +104,15 @@ def initializeSession(userId):
     PrivateSecret, PublicSecret = initiateECDH()
     public_secret_bytes = publicKeyToBytes(PublicSecret)
     signature = sign(public_secret_bytes,privateKeyFromPEM(getSigningKey()))
+    ps85 = base64.b85encode(public_secret_bytes).decode('ascii')
+    sig85 = base64.b85encode(signature).decode('ascii')
     print("\n\n")
-    print("Please provide this public secret to the other user:\n----------\n" + base64.b85encode(public_secret_bytes).decode('ascii'))
-    print("\nPlease provide this signature to the other user:\n----------\n" + base64.b85encode(signature).decode('ascii'))
+    print("Please provide this public secret to the other user:\n----------\n" + ps85)
+    print("\nPlease provide this signature to the other user:\n----------\n" + sig85)
     print("\n\n")
+    msgJSON = {"mode":3,"sec":ps85, "sig":sig85}
+    qrmsg = json.dumps(msgJSON)
+    produceQRCode(qrmsg)
     recevied_secret_b85 = input("Please enter provided secret (or enter to delay): ")
     if(recevied_secret_b85 == ""):
         return PrivateSecret
@@ -122,20 +130,25 @@ def initializeSession(userId):
     saveSessionKey(userId, shared_secret)
     return PrivateSecret
 
-def acceptSessionInit(userId, active_private_key):
+def acceptSessionInit(userId, active_private_secret, received_secret_b85, recevied_signature_b85):
     try:
         publicKey = bytesToPublicKey(getPublicKey(userId))
     except RuntimeError:
         print("\n\ERROR: No public key for provided id!\n\n")
         return None
 
-    print("\n\n")
-    recevied_secret_b85 = input("Please enter provided secret: ")
-    received_secret_bytes = base64.b85decode(recevied_secret_b85)
+    if(active_private_secret == None):
+        active_private_secret, PublicSecret = initiateECDH()
+    else:
+        PublicSecret = getMyPublicKey(active_private_secret)
+
+    if(received_secret_b85 == None):
+        print("\n\n")
+        received_secret_b85 = input("Please enter provided secret: ")
+        recevied_signature_b85 = input("Please enter provided signature: ")
     
     # Verify the received secret
-    received_secret_bytes = base64.b85decode(recevied_secret_b85)
-    recevied_signature_b85 = input("Please enter provided signature: ")
+    received_secret_bytes = base64.b85decode(received_secret_b85)
     recevied_signature_bytes = base64.b85decode(recevied_signature_b85)
     if(verify(received_secret_bytes,recevied_signature_bytes,publicKey) == False):
         print("\n----------\nERROR: Failed to verify signature!\n----------\n")
@@ -143,9 +156,16 @@ def acceptSessionInit(userId, active_private_key):
 
     # Calculate Shared Secret
     received_secret = bytesToPublicKey(received_secret_bytes)
-    shared_secret, public_secret = completeECDH(active_private_key, received_secret)
+    shared_secret, _ = completeECDH(active_private_secret, received_secret)
     print("Session Initialized for user: "+ userId)
     print("\n\n")
+    public_secret_bytes = publicKeyToBytes(PublicSecret)
+    signature = sign(public_secret_bytes,privateKeyFromPEM(getSigningKey()))
+    ps85 = base64.b85encode(public_secret_bytes).decode('ascii')
+    sig85 = base64.b85encode(signature).decode('ascii')
+    msgJSON = {"mode":3,"sec":ps85, "sig":sig85}
+    qrmsg = json.dumps(msgJSON)
+    produceQRCode(qrmsg)
     saveSessionKey(userId, shared_secret)
 
 def sharePublicKeys(user_id):
@@ -170,11 +190,12 @@ def camTest():
         # get the image
         _, img = cap.read()
         img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        pbar = pyzbar.decode(img)
+        minx, maxx, miny, maxy = None, None, None, None
         h = int(img.shape[0]*.5)
         w = int(img.shape[1]*.5)
         img = cv2.resize(img,(w,h),interpolation=cv2.INTER_LINEAR)
-        data, bbox, _ = detector.detectAndDecode(img)
+        dataq, bbox, _ = detector.detectAndDecode(img)
+        data = False
         if(bbox is not None):
             for i in range(len(bbox[0])):
                 x1 = int(bbox[0][i][0])
@@ -182,6 +203,7 @@ def camTest():
                 x2 = int(bbox[0][(i+1) % len(bbox[0])][0])
                 y2 = int(bbox[0][(i+1) % len(bbox[0])][1])
                 cv2.line(img,(x1,y1),(x2,y2),color=(0,255, 0), thickness=5)
+        pbar = pyzbar.decode(img)
         img = cv2.resize(img,(int(w/4),int(h/4)),interpolation=cv2.INTER_LINEAR)
         if pbar:
             decoded = pbar[0].data.decode()
@@ -225,6 +247,7 @@ def main():
         print('(5): Finalize Session Initiation')
         print('(6): Share Public Key')
         print('(7): Exit App')
+        print('(8): Receive a QR Code')
         print('----------------------------------')
 
         chosen_mode = input('Choose function to perform: ')
@@ -247,14 +270,14 @@ def main():
             continue
         if(chosen_mode == '4'):
             user_id = input('Provide user_id: ')
-            acceptSessionInit(user_id, None)
+            acceptSessionInit(user_id, None, None,None)
             continue
         if(chosen_mode == '5'):
             if ActivePrivateSecret == None:
                 print('Function unavailable!')
                 continue
             user_id = input('Provide user_id: ')
-            acceptSessionInit(user_id, ActivePrivateSecret)
+            acceptSessionInit(user_id, ActivePrivateSecret,None,None)
             continue
         if(chosen_mode == '6'):
             user_id = input('Provide user_id for shared user: ')
@@ -264,7 +287,7 @@ def main():
             print("Thanks for using your friendly E2E Application!")
             exit()
         if(chosen_mode == '8'):
-            receiveQRCode()
+            receiveQRCode(ActivePrivateSecret)
             continue
     
 if __name__ == "__main__":
