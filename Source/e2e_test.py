@@ -2,6 +2,7 @@ from e2ejson import *
 from e2ecrypto import *
 import unittest
 import random
+import os
 
 
 class TestE2ECrypto(unittest.TestCase):
@@ -47,25 +48,32 @@ class TestE2ECrypto(unittest.TestCase):
         self.assertEqual(shared_key_1,shared_key_2)
 
 class TestE2EJson(unittest.TestCase):
+    def setUp(self):
+        try:
+           os.mkdir("tests")
+        except FileExistsError:
+            pass
+        self.db = jsonDatabase(root_directory="./tests/")
+
     def test_save_and_load_session(self):
         id = str('').join(random.choices('123456789', k=16))
         key = os.urandom(32)
-        saveSessionKey(id,key)
-        key2 = getSessionKey(id)
+        self.db.saveSessionKey(id,key)
+        key2 = self.db.getSessionKey(id)
         self.assertEqual(key, key2)
-        removeSession(id)
+        self.db.removeSession(id)
 
-    @unittest.skip('Skipping to prevent signing key destruction')
+    unittest.skip('Skipping to prevent signing key destruction')
     def test_save_and_load_signingKey(self):
         key = base64.b85encode(os.urandom(384)).decode('ascii')
-        setSigningKey(key)
-        key2 = getSigningKey()
+        self.db.setSigningKey(key)
+        key2 = self.db.getSigningKey()
         self.assertEqual(key, key2)
 
     def test_save_and_load_publicKey(self):
         id = str('').join(random.choices('123456789', k=16))
         key = os.urandom(84)
-        storePublicKey(id, key)
-        key2 = getPublicKey(id)
+        self.db.storePublicKey(id, key)
+        key2 = self.db.getPublicKey(id)
         self.assertEqual(key, key2)
-        removePublicKey(id)
+        self.db.removePublicKey(id)

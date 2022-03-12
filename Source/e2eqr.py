@@ -13,6 +13,7 @@ import base64
 
 screen = None
 width, height = None, None
+db = None
 
 class Example(QWidget):
 
@@ -59,7 +60,7 @@ def sendEncryptedMessage(user_id, secret_message):
     #TODO: need to have a lookup for user to session
     session_id = user_id
     try:
-        key = getSessionKey(session_id)
+        key = db.getSessionKey(session_id)
     except RuntimeError:
         print("No active session for user: " + user_id)
     encrypted_message_bytes, iv, tag = encrypt(bytes(secret_message,'ascii'), key)
@@ -75,7 +76,7 @@ def receiveEncryptedMessage(user_id, encrypted_message, iv, tag):
     #TODO: need to have a lookup for user to session
     session_id = user_id
     try:
-        key = getSessionKey(session_id)
+        key = db.getSessionKey(session_id)
     except RuntimeError:
         print("No active session for user: " + user_id)
     encrypted_message_bytes = base64.b85decode(encrypted_message)
@@ -106,13 +107,13 @@ def receiveQRCode(ActivePrivateSecret):
 # TODO: Move to other module
 def initializeSession(userId):
     try:
-        publicKey = bytesToPublicKey(getPublicKey(userId))
+        publicKey = bytesToPublicKey(db.getPublicKey(userId))
     except RuntimeError:
         print("\n\ERROR: No public key for provided id!\n\n")
         return None
     PrivateSecret, PublicSecret = initiateECDH()
     public_secret_bytes = publicKeyToBytes(PublicSecret)
-    signature = sign(public_secret_bytes,privateKeyFromPEM(getSigningKey()))
+    signature = sign(public_secret_bytes,privateKeyFromPEM(db.getSigningKey()))
     ps85 = base64.b85encode(public_secret_bytes).decode('ascii')
     sig85 = base64.b85encode(signature).decode('ascii')
     msgJSON = {"mode":3,"sec":ps85, "sig":sig85}
@@ -122,7 +123,7 @@ def initializeSession(userId):
 
 def acceptSessionInit(userId, active_private_secret, received_secret_b85, recevied_signature_b85):
     try:
-        publicKey = bytesToPublicKey(getPublicKey(userId))
+        publicKey = bytesToPublicKey(db.getPublicKey(userId))
     except RuntimeError:
         print("\n\ERROR: No public key for provided id!\n\n")
         return None
@@ -152,12 +153,12 @@ def acceptSessionInit(userId, active_private_secret, received_secret_b85, recevi
     shared_secret, _ = completeECDH(active_private_secret, received_secret)
     print("Session Initialized for user: "+ userId)
     print("\n\n")
-    saveSessionKey(userId, shared_secret)
+    db.saveSessionKey(userId, shared_secret)
 
     # Provide new public secret if new session initiation
     if(new_initiation):
         public_secret_bytes = publicKeyToBytes(PublicSecret)
-        signature = sign(public_secret_bytes,privateKeyFromPEM(getSigningKey()))
+        signature = sign(public_secret_bytes,privateKeyFromPEM(db.getSigningKey()))
         ps85 = base64.b85encode(public_secret_bytes).decode('ascii')
         sig85 = base64.b85encode(signature).decode('ascii')
         msgJSON = {"mode":3,"sec":ps85, "sig":sig85}
@@ -166,7 +167,7 @@ def acceptSessionInit(userId, active_private_secret, received_secret_b85, recevi
     
 
 def sharePublicKeys():
-    publicKey = publicKeyToBytes(getMyPublicKey(privateKeyFromPEM(getSigningKey())))
+    publicKey = publicKeyToBytes(getMyPublicKey(privateKeyFromPEM(db.getSigningKey())))
     publicKey_85 = base64.b85encode(publicKey).decode('ascii')
     msgJSON = {"mode":6,"publickey":publicKey_85}
     qrmsg = json.dumps(msgJSON)
@@ -174,7 +175,7 @@ def sharePublicKeys():
 
 def receivePublicKey(user_id, received_pub_key_b85):
     public_key = base64.b85decode(received_pub_key_b85)
-    storePublicKey(user_id, public_key)
+    db.storePublicKey(user_id, public_key)
 
 def cameraCapture():
     # set up camera object
@@ -218,18 +219,23 @@ def cameraCapture():
 
 
 def main():
+    global screen, width, height
+    global db
+
+    db = jsonDatabase()
+
     try:
-        signingkeyPEM = getSigningKey()
+        signingkeyPEM = db.getSigningKey()
         signingKey = privateKeyFromPEM(signingkeyPEM)
     except RuntimeError:
         signingkey = generatePrivateKey()
         signingKeyPEM = privateKeyToPEM(signingkey)
-        setSigningKey(signingKeyPEM)
+        db.setSigningKey(signingKeyPEM)
 
     ActivePrivateSecret = None
 
     # get the size of the screen
-    global screen, width, height
+    
     try:
         screen = screeninfo.get_monitors()[0]
         width, height = screen.width, screen.height
