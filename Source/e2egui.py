@@ -83,6 +83,9 @@ def receiveQRCode(ActivePrivateSecret):
     if mode == 3:
         acceptSessionInit(user_id, ActivePrivateSecret, data['sec'], data['sig'])
         return
+    if mode == 6:
+        receivePublicKey(user_id, data['publickey'])
+        return
     return
 
 def receiveEncryptedQRCode(user_id):
@@ -173,13 +176,16 @@ def acceptSessionInit(userId, active_private_secret, received_secret_b85, recevi
     produceQRCode(qrmsg)
     saveSessionKey(userId, shared_secret)
 
-def sharePublicKeys(user_id):
+def sharePublicKeys():
     publicKey = publicKeyToBytes(getMyPublicKey(privateKeyFromPEM(getSigningKey())))
-    print('\n----------------------------------')
-    print("Share this public key (b85):\n" + base64.b85encode(publicKey).decode('ascii'))
-    print('----------------------------------\n')
-    recPublicKey = input("Please enter provided public key: ")
-    storePublicKey(user_id, base64.b85decode(recPublicKey))
+    publicKey_85 = base64.b85encode(publicKey).decode('ascii')
+    msgJSON = {"mode":6,"publickey":publicKey_85}
+    qrmsg = json.dumps(msgJSON)
+    produceQRCode(qrmsg)
+
+def receivePublicKey(user_id, received_pub_key_b85):
+    public_key = bytesToPublicKey(base64.b85decode(received_pub_key_b85))
+    storePublicKey(user_id, base64.b85decode(public_key))
 
 def camTest():
     # set up camera object
@@ -283,8 +289,7 @@ def main():
             acceptSessionInit(user_id, ActivePrivateSecret,None,None)
             continue
         if(chosen_mode == '6'):
-            user_id = input('Provide user_id for shared user: ')
-            sharePublicKeys(user_id)
+            sharePublicKeys()
             continue
         if(chosen_mode == '7'):
             print("Thanks for using your friendly E2E Application!")
