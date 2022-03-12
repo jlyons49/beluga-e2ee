@@ -46,11 +46,6 @@ def sendEncryptedMessage(user_id, secret_message):
     msg85= base64.b85encode(encrypted_message_bytes).decode('ascii')
     iv85 = base64.b85encode(iv).decode('ascii')
     tag85 = base64.b85encode(tag).decode('ascii')
-    print('\n----------------------------------')
-    print("This is your encrypted message (b85):\n" + base64.b85encode(encrypted_message_bytes).decode('ascii'))
-    print("This is your iv (b85):\n" + base64.b85encode(iv).decode('ascii'))
-    print("This is your tag (b85):\n" + base64.b85encode(tag).decode('ascii'))
-    print('----------------------------------\n')
     msgJSON = {"mode":1,"iv":iv85, "ct":msg85, "tag":tag85}
     qrmsg = json.dumps(msgJSON)
     produceQRCode(qrmsg)
@@ -103,21 +98,6 @@ def initializeSession(userId):
     msgJSON = {"mode":3,"sec":ps85, "sig":sig85}
     qrmsg = json.dumps(msgJSON)
     produceQRCode(qrmsg)
-    # recevied_secret_b85 = input("Please enter provided secret (or enter to delay): ")
-    # if(recevied_secret_b85 == ""):
-    #     return PrivateSecret
-    # received_secret_bytes = base64.b85decode(recevied_secret_b85)
-    # recevied_signature_b85 = input("Please enter provided signature: ")
-    # recevied_signature_bytes = base64.b85decode(recevied_signature_b85)
-    # if(verify(received_secret_bytes,recevied_signature_bytes,publicKey) == False):
-    #     print("\n----------\nERROR: Failed to verify signature!\n----------\n")
-    #     return None
-    # received_secret = bytesToPublicKey(received_secret_bytes)
-    # shared_secret,pkholder = completeECDH(PrivateSecret, received_secret)
-    # print("\n\n")
-    # print("Session Initialized for user: "+ userId)
-    # print("\n\n")
-    # saveSessionKey(userId, shared_secret)
     return PrivateSecret
 
 def acceptSessionInit(userId, active_private_secret, received_secret_b85, recevied_signature_b85):
