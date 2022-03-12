@@ -5,12 +5,31 @@ import qrcode
 import screeninfo
 from pyzbar import pyzbar
 import json
+from PyQt5.QtWidgets import QApplication, QLabel, QGridLayout, QWidget
+from PyQt5.QtGui import QPixmap
 
 #TODO: remove dependencies by making a new module
 import base64
 
 screen = None
 width, height = None, None
+
+class Example(QWidget):
+
+    def __init__(self):
+        super().__init__()
+
+        self.im = QPixmap("./qr.png")
+        self.label = QLabel()
+        self.label.setPixmap(self.im.scaledToWidth(420))
+
+        self.grid = QGridLayout()
+        self.grid.addWidget(self.label,1,1)
+        self.setLayout(self.grid)
+
+        self.setGeometry(0,0,480,480)
+        self.setWindowTitle("PyQT show image")
+        self.show()
 
 def produceQRCode(qrmsg):
     qr = qrcode.QRCode(version=None,error_correction=qrcode.constants.ERROR_CORRECT_L,border=1,)
@@ -30,9 +49,10 @@ def produceQRCode(qrmsg):
         cv2.waitKey(0) # waits until a key is pressed
         cv2.destroyAllWindows() # destroys the window showing image
     else:
-        print('-------------------------------------------------\n')
-        print("No screen available, please open qr.png to share.")
-        print('-------------------------------------------------\n')
+        app = QApplication(['0'])
+        ex = Example()
+        app.exec_()
+
 
 # TODO: Move to other module
 def sendEncryptedMessage(user_id, secret_message):
