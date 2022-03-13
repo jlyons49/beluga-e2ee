@@ -190,25 +190,18 @@ def cameraCapture():
     while True:
         # get the image
         _, img = cap.read()
-        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-        h = int(img.shape[0]*.5)
-        w = int(img.shape[1]*.5)
+        h = int(img.shape[0]*.6)
+        w = int(img.shape[1]*.6)
         img = cv2.resize(img,(w,h),interpolation=cv2.INTER_LINEAR)
-        dataq, bbox, _ = detector.detectAndDecode(img)
-        data = False
-        if(bbox is not None):
-            for i in range(len(bbox[0])):
-                x1 = int(bbox[0][i][0])
-                y1 = int(bbox[0][i][1])
-                x2 = int(bbox[0][(i+1) % len(bbox[0])][0])
-                y2 = int(bbox[0][(i+1) % len(bbox[0])][1])
-                cv2.line(img,(x1,y1),(x2,y2),color=(0,255, 0), thickness=5)
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         pbar = pyzbar.decode(img)
-        img = cv2.resize(img,(int(w/4),int(h/4)),interpolation=cv2.INTER_LINEAR)
         if pbar:
             decoded = pbar[0].data.decode()
             data = json.loads(decoded)
             print("data found: ", data)
+            x, y, qrw, qrh = pbar[0].rect.left, pbar[0].rect.top, pbar[0].rect.width, pbar[0].rect.height
+            cv2.rectangle(img, (x,y),(x+qrw, y+qrh),(255, 0, 0), 8)
+        img = cv2.resize(img,(int(w/4),int(h/4)),interpolation=cv2.INTER_LINEAR)
         cv2.imshow("code detector", img)
         if(cv2.waitKey(1) == ord("q") or data):
             break
