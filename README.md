@@ -11,6 +11,10 @@ This is the repository for an End-to-End Encryption solution implemented for a G
   * [pyzbar](https://pypi.org/project/pyzbar/)
 * [OpenCV 4.5.4](https://qengineering.eu/install-opencv-4.5-on-raspberry-pi-4.html)
 
+## Usage
+
+Navigate to the source directory and call `python3 e2eqr.py`
+
 ## Documents
 
 * [System Design Document](https://github.gatech.edu/jlyons3/e2e-system/blob/63914044cc1f510431c9c68bf7e5050aa5f48d9d/Documents/system-design.md)
