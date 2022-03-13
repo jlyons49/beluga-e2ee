@@ -9,6 +9,7 @@ from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
 from cryptography.hazmat.primitives.serialization import PrivateFormat, load_pem_private_key, BestAvailableEncryption
 from cryptography.hazmat.primitives.kdf.hkdf import HKDF
 import cryptography.exceptions
+import zlib
 
 def generatePrivateKey():
     return ec.generate_private_key(ec.SECP384R1())
@@ -50,9 +51,10 @@ def completeECDH(private_key: ec.EllipticCurvePrivateKey, received_public_key: e
 
 # Encrypts the byte array secret_message with key
 def encrypt(secret_message, key):
-    if len(secret_message)%16 != 0 : secret_message = secret_message + b'`'
-    while len(secret_message)%16 != 0 :
-        secret_message = secret_message + b'0'
+    compressed_message = zlib.compress(secret_message)
+    while len(compressed_message)%16 != 0 :
+        compressed_message = b'\0' + compressed_message
+    print(compressed_message)
 
     # Create random key and IV (should be replaced with more secure method later)
     iv = os.urandom(16)
@@ -60,13 +62,9 @@ def encrypt(secret_message, key):
     # Generate the ciphertext and tag
     cipher = Cipher(algorithms.AES(key), modes.GCM(iv))
     encryptor = cipher.encryptor()
-    ciphertext = encryptor.update(secret_message) + encryptor.finalize()
+    ciphertext = encryptor.update(compressed_message) + encryptor.finalize()
     tag = encryptor.tag
    
-    cipher = Cipher(algorithms.AES(key), modes.GCM(iv, tag))
-    decryptor = cipher.decryptor()
-    pt = decryptor.update(ciphertext) + decryptor.finalize()
-
     return ciphertext, iv, tag
 
 # Decrypts byte array ciphertext with key and returns decrypted byte array
@@ -74,10 +72,12 @@ def decrypt(ciphertext, iv, tag, key):
     cipher = Cipher(algorithms.AES(key), modes.GCM(iv, tag))
     decryptor = cipher.decryptor()
     try:
-        plaintext = decryptor.update(ciphertext) + decryptor.finalize()
+        compressed_message = decryptor.update(ciphertext) + decryptor.finalize()
     except cryptography.exceptions.InvalidTag:
-        raise RuntimeError('Bad tag!')
-    plaintext = bytes(plaintext.decode('ASCII').partition('`')[0], 'ascii')
+        raise RuntimeError('Failure to decrypt!')
+    compressed_message = compressed_message.strip(b'\0')
+    print(compressed_message)
+    plaintext = zlib.decompress(compressed_message)
 
     return plaintext
 
