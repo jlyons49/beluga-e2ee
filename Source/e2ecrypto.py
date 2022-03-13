@@ -75,7 +75,6 @@ def decrypt(ciphertext, iv, tag, key):
     except cryptography.exceptions.InvalidTag:
         raise RuntimeError('Failure to decrypt!')
     compressed_message = compressed_message.strip(b'\0')
-    print(compressed_message)
     plaintext = zlib.decompress(compressed_message)
 
     return plaintext
