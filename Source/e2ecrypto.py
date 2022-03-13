@@ -54,7 +54,6 @@ def encrypt(secret_message, key):
     compressed_message = zlib.compress(secret_message)
     while len(compressed_message)%16 != 0 :
         compressed_message = b'\0' + compressed_message
-    print(compressed_message)
 
     # Create random key and IV (should be replaced with more secure method later)
     iv = os.urandom(16)
