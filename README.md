@@ -4,6 +4,7 @@ This is the repository for an End-to-End Encryption solution implemented for a G
 
 ## Usage Requirements
 
+* A compute device with a screen and a camera
 * Python 3.10 (May be backwards compatible but untested)
 * Python modules:
   * [Cryptography](https://pypi.org/project/cryptography/)
