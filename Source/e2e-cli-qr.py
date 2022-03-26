@@ -1,5 +1,4 @@
-from e2ecrypto import *
-from e2ejson import *
+from e2eimplementation import *
 import cv2
 import qrcode
 import screeninfo
@@ -8,12 +7,8 @@ import json
 from PyQt5.QtWidgets import QApplication, QLabel, QGridLayout, QWidget
 from PyQt5.QtGui import QPixmap
 
-#TODO: remove dependencies by making a new module
-import base64
-
 screen = None
 width, height = None, None
-db = None
 
 class Example(QWidget):
 
@@ -49,43 +44,11 @@ def produceQRCode(qrmsg):
         cv2.imshow(window_name, img)
         cv2.waitKey(0) # waits until a key is pressed
         cv2.destroyAllWindows() # destroys the window showing image
-    else:
-        app = QApplication(['0'])
-        ex = Example()
-        app.exec_()
+    app = QApplication(['0'])
+    ex = Example()
+    app.exec_()
 
-
-# TODO: Move to other module
-def sendEncryptedMessage(user_id, secret_message):
-    #TODO: need to have a lookup for user to session
-    session_id = user_id
-    try:
-        key = db.getSessionKey(session_id)
-    except RuntimeError:
-        print("No active session for user: " + user_id)
-    encrypted_message_bytes, iv, tag = encrypt(bytes(secret_message,'ascii'), key)
-    msg85= base64.b85encode(encrypted_message_bytes).decode('ascii')
-    iv85 = base64.b85encode(iv).decode('ascii')
-    tag85 = base64.b85encode(tag).decode('ascii')
-    msgJSON = {"mode":1,"iv":iv85, "ct":msg85, "tag":tag85}
-    qrmsg = json.dumps(msgJSON)
-    produceQRCode(qrmsg)
-
-# TODO: Move to other module
-def receiveEncryptedMessage(user_id, encrypted_message, iv, tag):
-    #TODO: need to have a lookup for user to session
-    session_id = user_id
-    try:
-        key = db.getSessionKey(session_id)
-    except RuntimeError:
-        print("No active session for user: " + user_id)
-    encrypted_message_bytes = base64.b85decode(encrypted_message)
-    message_bytes = decrypt(encrypted_message_bytes, base64.b85decode(iv), base64.b85decode(tag), key)
-    print("\n\n")
-    print("This is your secret message:\n----------\n" + message_bytes.decode('ASCII'))
-    print("\n\n")
-
-def receiveQRCode(ActivePrivateSecret):
+def receiveQRCode(implementation):
     user_id = input("Please specify source user id: ")
     data = cameraCapture()
     try:
@@ -94,88 +57,20 @@ def receiveQRCode(ActivePrivateSecret):
         print("Invalid QR Code!")
         return
     if mode == 1:
-        receiveEncryptedMessage(user_id, data['ct'],data['iv'],data['tag'])
+        result = implementation.receiveEncryptedMessage(user_id, data['ct'],data['iv'],data['tag'])
+        print("\n\n")
+        print("This is your secret message:\n----------\n" + result)
+        print("\n\n")
         return
     if mode == 3:
-        acceptSessionInit(user_id, ActivePrivateSecret, data['sec'], data['sig'])
+        result_json = implementation.acceptSessionInit(user_id, data['sec'], data['sig'])
+        if result_json != None:
+            produceQRCode(result_json)
         return
     if mode == 6:
-        receivePublicKey(user_id, data['publickey'])
+        implementation.receivePublicKey(user_id, data['publickey'])
         return
     return
-
-# TODO: Move to other module
-def initializeSession(userId):
-    try:
-        publicKey = bytesToPublicKey(db.getPublicKey(userId))
-    except RuntimeError:
-        print("\n\ERROR: No public key for provided id!\n\n")
-        return None
-    PrivateSecret, PublicSecret = initiateECDH()
-    public_secret_bytes = publicKeyToBytes(PublicSecret)
-    signature = sign(public_secret_bytes,privateKeyFromPEM(db.getSigningKey()))
-    ps85 = base64.b85encode(public_secret_bytes).decode('ascii')
-    sig85 = base64.b85encode(signature).decode('ascii')
-    msgJSON = {"mode":3,"sec":ps85, "sig":sig85}
-    qrmsg = json.dumps(msgJSON)
-    produceQRCode(qrmsg)
-    return PrivateSecret
-
-def acceptSessionInit(userId, active_private_secret, received_secret_b85, recevied_signature_b85):
-    try:
-        publicKey = bytesToPublicKey(db.getPublicKey(userId))
-    except RuntimeError:
-        print("\n\ERROR: No public key for provided id!\n\n")
-        return None
-
-    new_initiation = False
-
-    if(active_private_secret == None):
-        active_private_secret, PublicSecret = initiateECDH()
-        new_initiation = True
-    else:
-        PublicSecret = getMyPublicKey(active_private_secret)
-
-    if(received_secret_b85 == None):
-        print("\n\n")
-        received_secret_b85 = input("Please enter provided secret: ")
-        recevied_signature_b85 = input("Please enter provided signature: ")
-    
-    # Verify the received secret
-    received_secret_bytes = base64.b85decode(received_secret_b85)
-    recevied_signature_bytes = base64.b85decode(recevied_signature_b85)
-    if(verify(received_secret_bytes,recevied_signature_bytes,publicKey) == False):
-        print("\n----------\nERROR: Failed to verify signature!\n----------\n")
-        return None
-
-    # Calculate Shared Secret
-    received_secret = bytesToPublicKey(received_secret_bytes)
-    shared_secret, _ = completeECDH(active_private_secret, received_secret)
-    print("Session Initialized for user: "+ userId)
-    print("\n\n")
-    db.saveSessionKey(userId, shared_secret)
-
-    # Provide new public secret if new session initiation
-    if(new_initiation):
-        public_secret_bytes = publicKeyToBytes(PublicSecret)
-        signature = sign(public_secret_bytes,privateKeyFromPEM(db.getSigningKey()))
-        ps85 = base64.b85encode(public_secret_bytes).decode('ascii')
-        sig85 = base64.b85encode(signature).decode('ascii')
-        msgJSON = {"mode":3,"sec":ps85, "sig":sig85}
-        qrmsg = json.dumps(msgJSON)
-        produceQRCode(qrmsg)
-    
-
-def sharePublicKeys():
-    publicKey = publicKeyToBytes(getMyPublicKey(privateKeyFromPEM(db.getSigningKey())))
-    publicKey_85 = base64.b85encode(publicKey).decode('ascii')
-    msgJSON = {"mode":6,"publickey":publicKey_85}
-    qrmsg = json.dumps(msgJSON)
-    produceQRCode(qrmsg)
-
-def receivePublicKey(user_id, received_pub_key_b85):
-    public_key = base64.b85decode(received_pub_key_b85)
-    db.storePublicKey(user_id, public_key)
 
 def cameraCapture():
     # set up camera object
@@ -213,22 +108,10 @@ def cameraCapture():
 
 def main():
     global screen, width, height
-    global db
 
-    db = jsonDatabase()
-
-    try:
-        signingkeyPEM = db.getSigningKey()
-        signingKey = privateKeyFromPEM(signingkeyPEM)
-    except RuntimeError:
-        signingkey = generatePrivateKey()
-        signingKeyPEM = privateKeyToPEM(signingkey)
-        db.setSigningKey(signingKeyPEM)
-
-    ActivePrivateSecret = None
+    implementation = e2eSystem()
 
     # get the size of the screen
-    
     try:
         screen = screeninfo.get_monitors()[0]
         width, height = screen.width, screen.height
@@ -247,19 +130,23 @@ def main():
 
         chosen_mode = input('Choose function to perform: ')
         if(chosen_mode == '1'):
-            receiveQRCode(ActivePrivateSecret)
+            receiveQRCode(implementation)
             continue
         elif(chosen_mode == '2'):
             user_id = input('Provide destination user_id: ')
             secret_message = input('Enter Secret Message: ')
-            sendEncryptedMessage(user_id, secret_message)
+            encrypted_message_json = implementation.sendEncryptedMessage(user_id, secret_message)
+            produceQRCode(encrypted_message_json)
             continue
         elif(chosen_mode == '3'):
             user_id = input('Provide destination user_id: ')
-            ActivePrivateSecret = initializeSession(user_id)
+            session_init_json = implementation.initializeSession(user_id)
+            if session_init_json != None:
+                produceQRCode(session_init_json)
             continue
         elif(chosen_mode == '4'):
-            sharePublicKeys()
+            public_key_json = implementation.sharePublicKeys()
+            produceQRCode(public_key_json)
             continue
         elif(chosen_mode == '5'):
             print("Thanks for using your friendly E2E Application!")
