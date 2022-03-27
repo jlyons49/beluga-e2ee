@@ -4,28 +4,32 @@ import qrcode
 import screeninfo
 from pyzbar import pyzbar
 import json
-from PyQt5.QtWidgets import QApplication, QLabel, QGridLayout, QWidget
-from PyQt5.QtGui import QPixmap
+from PyQt5.QtCore import *
+from PyQt5.QtWidgets import *
+from PyQt5.QtGui import *
 
 screen = None
 width, height = None, None
 
-class Example(QWidget):
+class QRDisplay(QWidget):
 
     def __init__(self):
         super().__init__()
 
+        self.label = QLabel("Provide this to other user:")
+
         self.im = QPixmap("./qr.png")
-        self.label = QLabel()
-        self.label.setPixmap(self.im.scaledToWidth(420))
+        self.image = QLabel()
+        self.image.setPixmap(self.im.scaledToHeight(440))
 
-        self.grid = QGridLayout()
-        self.grid.addWidget(self.label,1,1)
-        self.setLayout(self.grid)
+        self.verticallayout = QVBoxLayout()
+        self.verticallayout.setAlignment(Qt.AlignHCenter)
+        self.verticallayout.addWidget(self.label)
+        self.verticallayout.addWidget(self.image)
+        self.setLayout(self.verticallayout)
 
-        self.setGeometry(0,0,480,480)
-        self.setWindowTitle("PyQT show image")
-        self.show()
+        self.setWindowTitle("QR Code Display")
+        self.showMaximized()
 
 def produceQRCode(qrmsg):
     qr = qrcode.QRCode(version=None,error_correction=qrcode.constants.ERROR_CORRECT_L,border=1,)
@@ -44,8 +48,9 @@ def produceQRCode(qrmsg):
         cv2.imshow(window_name, img)
         cv2.waitKey(0) # waits until a key is pressed
         cv2.destroyAllWindows() # destroys the window showing image
+        return
     app = QApplication(['0'])
-    ex = Example()
+    ex = QRDisplay()
     app.exec_()
 
 def receiveQRCode(implementation):
