@@ -11,96 +11,77 @@ class jsonDatabase():
 
     def __init__(self, root_directory="./"):
         self.root_directory = root_directory
+        self.database_loaded = False
+        self.database = None
+
+    def loadDatabase(self):
+        if self.database_loaded:
+            return True
+        try:
+            jsonFile = open(self.root_directory+"database.json", "r")
+            self.database = json.load(jsonFile)
+            jsonFile.close()
+        except FileNotFoundError:
+            self.database = {'signingKey':None,'sessionKeys':{},'publicKeys':{}}
+        self.database_loaded = True
+        return True
+
+    def saveDatabase(self):
+        if self.database_loaded == False:
+            return False
+        with open(self.root_directory+"database.json", "w") as jsonFile:
+            json_string = json.dumps(self.database, indent="")
+            jsonFile.write(json_string)
+        return True
+
 
     def saveSessionKey(self,id: str, key: bytes):
-        try:
-            jsonFile = open(self.root_directory+"sessionFile.json", "r")
-            data = json.load(jsonFile)
-            jsonFile.close()
-        except FileNotFoundError:
-            data = {}
-
-        data[id] = base64.b85encode(key).decode('ascii')
-
-        with open(self.root_directory+"sessionFile.json", "w") as jsonFile:
-            json.dump(data, jsonFile, indent="")
+        self.loadDatabase()
+        self.database['sessionKeys'][id] = base64.b85encode(key).decode('ascii')
+        self.saveDatabase()
 
     def getSessionKey(self,id):
-        try:
-            jsonFile = open(self.root_directory+"sessionFile.json", "r")
-            data = json.load(jsonFile)
-            jsonFile.close()
-        except:
-            raise RuntimeError('No session file!')
-
-        if(data.get(id) == None):
+        self.loadDatabase()
+        session_key = self.database['sessionKeys'].get(id)
+        if(session_key == None):
             raise RuntimeError('No session for id!')
-        
-        return base64.b85decode(data[id])
+        else:
+            return base64.b85decode(session_key)
 
     def removeSession(self,id):
-        try:
-            jsonFile = open(self.root_directory+"sessionFile.json", "r")
-            data = json.load(jsonFile)
-            jsonFile.close()
-        except FileNotFoundError:
-            return -1
-
-        data.pop(id)
-
-        with open(self.root_directory+"sessionFile.json", "w") as jsonFile:
-            json.dump(data, jsonFile, indent="")
-        
-        return 0
+        self.loadDatabase()
+        self.database['sessionKeys'].pop(id)
+        self.saveDatabase()
 
     def setSigningKey(self,key):
-        data = {"signingKey":key}  
-        with open(self.root_directory+"signingKey.json", "w") as jsonFile:
-            json.dump(data,jsonFile, indent="")
+        self.loadDatabase()
+        self.database['signingKey'] = key
+        self.saveDatabase()
+        
 
     def getSigningKey(self):
-        try:
-            jsonFile = open(self.root_directory+"signingKey.json", "r")
-            data = json.load(jsonFile)
-            jsonFile.close()
-        except FileNotFoundError:
+        self.loadDatabase()
+        if "signingKey" in self.database.keys():
+            signing_key = self.database["signingKey"]
+        if signing_key != None:
+            return self.database["signingKey"]
+        else:
             raise RuntimeError('No Signing Key Present')
-        
-        return data["signingKey"]
 
     def storePublicKey(self,id, public_key):
-        try:
-            jsonFile = open(self.root_directory+"publicKeys.json", "r")
-            data = json.load(jsonFile)
-            jsonFile.close()
-        except FileNotFoundError:
-            data = {}
-
-        data[id] = base64.b85encode(public_key).decode('ascii')
-
-        with open(self.root_directory+"publicKeys.json", "w") as jsonFile:
-            json.dump(data, jsonFile, indent="")
+        self.loadDatabase()
+        self.database['publicKeys'][id] = base64.b85encode(public_key).decode('ascii')
+        self.saveDatabase()
 
     def getPublicKey(self,id):
-        try:
-            jsonFile = open(self.root_directory+"publicKeys.json", "r")
-            data = json.load(jsonFile)
-            jsonFile.close()
-            return base64.b85decode(data[id])
-        except (FileNotFoundError, KeyError):
-            raise RuntimeError('No public key for provided id')
+        self.loadDatabase()
+        public_key = self.database['publicKeys'].get(id)
+        if(public_key == None):
+            raise RuntimeError('No public key for id!')
+        else:
+            return base64.b85decode(public_key)
         
     def removePublicKey(self,id):
-        try:
-            jsonFile = open(self.root_directory+"publicKeys.json", "r")
-            data = json.load(jsonFile)
-            jsonFile.close()
-        except FileNotFoundError:
-            return -1
-
-        data.pop(id)
-
-        with open(self.root_directory+"publicKeys.json", "w") as jsonFile:
-            json.dump(data, jsonFile, indent="")
-        
-        return 0
+        self.loadDatabase()
+        self.database['publicKeys'].pop(id)
+        self.saveDatabase()
