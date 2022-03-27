@@ -4,8 +4,11 @@ from e2ejson import *
 
 class e2eSystem():
 
-    def __init__(self):
-        self.db = jsonDatabase()
+    def __init__(self, password=""):
+        try:
+            self.db = jsonDatabase("./", password)
+        except RuntimeError:
+            raise RuntimeError('Failure to decrypt, password incorrect or file may be corrupted!')
         self.signingKey = None
         self.ActivePrivateSecret = None
 

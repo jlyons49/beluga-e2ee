@@ -114,7 +114,20 @@ def cameraCapture():
 def main():
     global screen, width, height
 
-    implementation = e2eSystem()
+    opened = False
+    count = 0
+
+    while not opened or count>3:
+        password = input("Please provide system password: ")
+        count = count + 1
+        try:
+            implementation = e2eSystem(password)
+        except RuntimeError:
+            print("Password failure or corrupted database!")
+            print("Remove database.json if password unrecoverable!")
+            continue
+        opened = True
+    password = ""
 
     # get the size of the screen
     try:
