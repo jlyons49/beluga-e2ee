@@ -24,6 +24,7 @@ class e2eSystem():
             key = self.db.getSessionKey(session_id)
         except RuntimeError:
             print("No active session for user: " + user_id)
+            return None
         encrypted_message_bytes, iv, tag = encrypt(bytes(secret_message,'ascii'), key)
         msg85= base64.b85encode(encrypted_message_bytes).decode('ascii')
         iv85 = base64.b85encode(iv).decode('ascii')
@@ -39,6 +40,7 @@ class e2eSystem():
             key = self.db.getSessionKey(session_id)
         except RuntimeError:
             print("No active session for user: " + user_id)
+            return None
         encrypted_message_bytes = base64.b85decode(encrypted_message)
         message_bytes = decrypt(encrypted_message_bytes, base64.b85decode(iv), base64.b85decode(tag), key)
         return message_bytes.decode('ASCII')

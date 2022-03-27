@@ -31,7 +31,10 @@ class jsonDatabase():
             data = json.load(jsonFile)
             jsonFile.close()
         except:
-            raise RuntimeError('No session for provided id')
+            raise RuntimeError('No session file!')
+
+        if(data.get(id) == None):
+            raise RuntimeError('No session for id!')
         
         return base64.b85decode(data[id])
 
