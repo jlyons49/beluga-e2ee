@@ -11,12 +11,14 @@ from PyQt5.QtGui import *
 screen = None
 width, height = None, None
 
+message_holder = {}
+
 class QRDisplay(QWidget):
 
-    def __init__(self):
+    def __init__(self, display_string):
         super().__init__()
 
-        self.label = QLabel("Provide this to other user:")
+        self.label = QLabel(display_string)
 
         self.im = QPixmap("./qr.png")
         self.image = QLabel()
@@ -31,7 +33,7 @@ class QRDisplay(QWidget):
         self.setWindowTitle("QR Code Display")
         self.showMaximized()
 
-def produceQRCode(qrmsg):
+def produceQRCode(qrmsg, display_string):
     qr = qrcode.QRCode(version=None,error_correction=qrcode.constants.ERROR_CORRECT_L,border=1,)
     qr.add_data(qrmsg)
     qr.make(fit=True)
@@ -50,7 +52,7 @@ def produceQRCode(qrmsg):
         cv2.destroyAllWindows() # destroys the window showing image
         return
     app = QApplication(['0'])
-    ex = QRDisplay()
+    ex = QRDisplay(display_string)
     app.exec_()
 
 def receiveQRCode(implementation):
@@ -67,10 +69,22 @@ def receiveQRCode(implementation):
         print("This is your secret message:\n----------\n" + result)
         print("\n\n")
         return
+    if mode == 2:
+        if message_holder.get(data['tag']) == None:
+            message_holder[data['tag']] = {'total':data['total'],'iv':data['iv']}
+        message_holder[data['tag']][data['index']] = data['ct']
+        combined_ct = ""
+        for i in range(0,message_holder[data['tag']]['total']):
+            if message_holder[data['tag']].get(i) == None:
+                return
+            else:
+                combined_ct = combined_ct + message_holder[data['tag']][i]
+        implementation.receiveEncryptedMessage(user_id,combined_ct,data['iv'],data['tag'])
+        return
     if mode == 3:
         result_json = implementation.acceptSessionInit(user_id, data['sec'], data['sig'])
         if result_json != None:
-            produceQRCode(result_json)
+            produceQRCode(result_json, "Provide this to other user")
         return
     if mode == 6:
         implementation.receivePublicKey(user_id, data['publickey'])
@@ -130,11 +144,11 @@ def main():
     password = ""
 
     # get the size of the screen
-    try:
-        screen = screeninfo.get_monitors()[0]
-        width, height = screen.width, screen.height
-    except:
-        print("No screen available!")
+    # try:
+    #     # screen = screeninfo.get_monitors()[0]
+    #     width, height = screen.width, screen.height
+    # except:
+    #     print("No screen available!")
     
     while(1):
         print('Available Functions:')
@@ -153,18 +167,20 @@ def main():
         elif(chosen_mode == '2'):
             user_id = input('Provide destination user_id: ')
             secret_message = input('Enter Secret Message: ')
-            encrypted_message_json = implementation.sendEncryptedMessage(user_id, secret_message)
-            produceQRCode(encrypted_message_json)
+            encrypted_message_json_list = implementation.sendEncryptedMessage(user_id, secret_message)
+            print(encrypted_message_json_list)
+            for i in range(0,len(encrypted_message_json_list)):
+                produceQRCode(encrypted_message_json_list[i], "Provide encrypted QR code " + str(i+1) + " of " + str(len(encrypted_message_json_list)))
             continue
         elif(chosen_mode == '3'):
             user_id = input('Provide destination user_id: ')
             session_init_json = implementation.initializeSession(user_id)
             if session_init_json != None:
-                produceQRCode(session_init_json)
+                produceQRCode(session_init_json, "Provide this to other user")
             continue
         elif(chosen_mode == '4'):
             public_key_json = implementation.sharePublicKeys()
-            produceQRCode(public_key_json)
+            produceQRCode(public_key_json, "Provide this to other user")
             continue
         elif(chosen_mode == '5'):
             print("Thanks for using your friendly E2E Application!")

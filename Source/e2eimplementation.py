@@ -27,14 +27,24 @@ class e2eSystem():
             key = self.db.getSessionKey(session_id)
         except RuntimeError:
             print("No active session for user: " + user_id)
-            return None
+            return []
         encrypted_message_bytes, iv, tag = encrypt(bytes(secret_message,'ascii'), key)
-        msg85= base64.b85encode(encrypted_message_bytes).decode('ascii')
         iv85 = base64.b85encode(iv).decode('ascii')
         tag85 = base64.b85encode(tag).decode('ascii')
-        msgJSON = {"mode":1,"iv":iv85, "ct":msg85, "tag":tag85}
-        qrmsg = json.dumps(msgJSON)
-        return qrmsg
+        qrmsgs = []
+        if(len(encrypted_message_bytes)<140):
+            msg85 = base64.b85encode(encrypted_message_bytes).decode('ascii')
+            msgJSON = {"mode":1,"iv":iv85, "ct":msg85, "tag":tag85}
+            qrmsgs = [json.dumps(msgJSON)]
+        else:
+            chunk_count = len(encrypted_message_bytes)//140
+            print("chunk count: " + str(chunk_count))
+            for i in range(0,chunk_count+1):
+                msg85 = base64.b85encode(encrypted_message_bytes[(i*140):((i+1)*140)]).decode('ascii')
+                msgJSON = {"mode":2,"index":i,"total":chunk_count+1,"iv":iv85, "ct":msg85, "tag":tag85}
+                qrmsgs.append(json.dumps(msgJSON))
+        return qrmsgs
+
 
     def receiveEncryptedMessage(self, user_id, encrypted_message, iv, tag):
         #TODO: need to have a lookup for user to session
