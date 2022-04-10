@@ -18,7 +18,6 @@ class TestE2ECrypto(unittest.TestCase):
         key = os.urandom(32)
         encrypted, iv, tag = encrypt(testString, key)
         self.assertNotEqual(testString,encrypted)
-        self.assertEqual(len(encrypted),32768)
 
     def test_decrypt_tag_failure(self):
         testString = str("This is just a test").encode('ASCII')
