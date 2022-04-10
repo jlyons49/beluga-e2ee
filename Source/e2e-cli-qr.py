@@ -22,7 +22,7 @@ class QRDisplay(QWidget):
 
         self.im = QPixmap("./qr.png")
         self.image = QLabel()
-        self.image.setPixmap(self.im.scaledToHeight(440))
+        self.image.setPixmap(self.im.scaledToHeight(420))
 
         self.verticallayout = QVBoxLayout()
         self.verticallayout.setAlignment(Qt.AlignHCenter)
@@ -31,7 +31,12 @@ class QRDisplay(QWidget):
         self.setLayout(self.verticallayout)
 
         self.setWindowTitle("QR Code Display")
-        self.showMaximized()
+        self.showFullScreen()
+
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key_Q or event.key() == Qt.Key_Escape:
+            self.deleteLater()
+        event.accept()
 
 def produceQRCode(qrmsg, display_string):
     qr = qrcode.QRCode(version=None,error_correction=qrcode.constants.ERROR_CORRECT_L,border=1,)
