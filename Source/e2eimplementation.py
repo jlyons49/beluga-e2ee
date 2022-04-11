@@ -107,6 +107,7 @@ class e2eSystem():
         print("Session Initialized for user: "+ user_id)
         print("\n\n")
         self.db.saveSessionKey(user_id, shared_secret)
+        self.ActivePrivateSecret = None
 
         # Provide new public secret if new session initiation
         if(new_initiation):
