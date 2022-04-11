@@ -84,7 +84,10 @@ def receiveQRCode(implementation):
                 return
             else:
                 combined_ct = combined_ct + message_holder[data['tag']][i]
-        implementation.receiveEncryptedMessage(user_id,combined_ct,data['iv'],data['tag'])
+        result = implementation.receiveEncryptedMessage(user_id,combined_ct,data['iv'],data['tag'])
+        print("\n\n")
+        print("This is your secret message:\n----------\n" + result)
+        print("\n\n")
         return
     if mode == 3:
         result_json = implementation.acceptSessionInit(user_id, data['sec'], data['sig'])
