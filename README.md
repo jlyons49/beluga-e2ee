@@ -5,7 +5,7 @@ This is the repository for an End-to-End Encryption solution implemented for a G
 ## Usage Requirements
 
 * A compute device with a screen and a camera
-* Python 3.10 (May be backwards compatible but untested)
+* Python 3.7 (May be backwards/forwads compatible but untested)
 * Python modules:
   * [Cryptography](https://pypi.org/project/cryptography/)
   * [qrcode](https://pypi.org/project/qrcode/)
@@ -14,7 +14,7 @@ This is the repository for an End-to-End Encryption solution implemented for a G
 
 ## Usage
 
-Navigate to the source directory and call `python3 e2eqr.py`
+From any directory, call `beluga`. The relavant database will be stored at the location local to where the call was made.
 
 ## Documents
 
