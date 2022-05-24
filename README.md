@@ -14,7 +14,7 @@ This is the repository for an End-to-End Encrypted messaging solution targeting 
 
 ## Usage
 
-From any directory, call `beluga`. The relavant database will be stored at the location local to where the call was made.
+From any directory, call `beluga`. The relavant database will be stored at the location local to where the call was made. First use will require creation of a password; subsequent uses will require this password to be entered prior to access of the database. Establishment of trusted public keys is recommended to take place in-person. Sessions should be re-established regularly.
 
 ## Documents
 
