@@ -1,4 +1,4 @@
-# E2E-System
+# beluga
 
 This is the repository for an End-to-End Encrypted messaging solution targeting a raspberry pi as an offboard encryption device. The system will produce QR codes to a display attached to the raspberry pi which can be sent over any channel without compromising data confidentiality.
 
