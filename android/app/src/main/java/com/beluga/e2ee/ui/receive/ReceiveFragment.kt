@@ -32,6 +32,21 @@ class ReceiveFragment : Fragment() {
         else Snackbar.make(requireView(), "Camera permission required", Snackbar.LENGTH_LONG).show()
     }
 
+    private val pickImage = registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+        uri ?: return@registerForActivityResult
+        val userId = binding.spinnerContact.selectedItem?.toString() ?: ""
+        if (userId.isBlank()) {
+            Snackbar.make(requireView(), "No contact selected", Snackbar.LENGTH_SHORT).show()
+            return@registerForActivityResult
+        }
+        QrScannerHelper.scanFromUri(
+            context = requireContext(),
+            uri = uri,
+            onResult = { raw -> viewModel.handleQr(userId, raw) },
+            onFailure = { Snackbar.make(requireView(), R.string.pick_no_qr, Snackbar.LENGTH_SHORT).show() }
+        )
+    }
+
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentReceiveBinding.inflate(inflater, container, false)
         return binding.root
@@ -53,6 +68,10 @@ class ReceiveFragment : Fragment() {
             } else {
                 requestPermission.launch(Manifest.permission.CAMERA)
             }
+        }
+
+        binding.btnPickImage.setOnClickListener {
+            pickImage.launch("image/*")
         }
 
         viewModel.scanResult.observe(viewLifecycleOwner) { result ->
@@ -88,6 +107,7 @@ class ReceiveFragment : Fragment() {
         }
         binding.previewView.visibility = View.VISIBLE
         binding.btnStartScan.isEnabled = false
+        binding.btnPickImage.isEnabled = false
         scanner = QrScannerHelper(
             context = requireContext(),
             lifecycleOwner = viewLifecycleOwner,

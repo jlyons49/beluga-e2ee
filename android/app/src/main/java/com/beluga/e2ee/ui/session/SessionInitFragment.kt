@@ -37,6 +37,16 @@ class SessionInitFragment : Fragment() {
         ActivityResultContracts.RequestPermission()
     ) { granted -> if (granted) startScanner() }
 
+    private val pickImage = registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+        uri ?: return@registerForActivityResult
+        QrScannerHelper.scanFromUri(
+            context = requireContext(),
+            uri = uri,
+            onResult = { raw -> handleScanResult(raw) },
+            onFailure = { Snackbar.make(requireView(), R.string.pick_no_qr, Snackbar.LENGTH_SHORT).show() }
+        )
+    }
+
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentSessionInitBinding.inflate(inflater, container, false)
         return binding.root
@@ -54,6 +64,7 @@ class SessionInitFragment : Fragment() {
                     binding.ivQrCode.visibility = View.VISIBLE
                     binding.tvInstruction.setText(R.string.session_show_qr)
                     binding.btnScanReply.visibility = View.VISIBLE
+                    binding.btnPickImage.visibility = View.VISIBLE
                 }
                 is SessionViewModel.State.Error -> {
                     viewModel.clearState()
@@ -73,6 +84,10 @@ class SessionInitFragment : Fragment() {
             }
         }
 
+        binding.btnPickImage.setOnClickListener {
+            pickImage.launch("image/*")
+        }
+
         binding.btnDone.setOnClickListener {
             findNavController().popBackStack()
         }
@@ -83,44 +98,44 @@ class SessionInitFragment : Fragment() {
     private fun startScanner() {
         binding.previewView.visibility = View.VISIBLE
         binding.btnScanReply.visibility = View.GONE
-        val app = requireActivity().application as BelugaApplication
+        binding.btnPickImage.visibility = View.GONE
         scanner = QrScannerHelper(
             context = requireContext(),
             lifecycleOwner = viewLifecycleOwner,
             previewView = binding.previewView,
-            onResult = { raw ->
-                try {
-                    val msg = QrMessageParser.parse(raw) as? QrMessage.SessionInit ?: run {
-                        Snackbar.make(requireView(), "Expected a session-init QR", Snackbar.LENGTH_SHORT).show()
-                        scanner?.reset()
-                        return@QrScannerHelper
-                    }
-                    CoroutineScope(Dispatchers.Main).launch {
-                        val reply = app.e2eSystem?.acceptSessionInit(args.userId, msg)
-                        if (reply != null) {
-                            // We are the responder: navigate to QrDisplay so the initiator can scan our reply.
-                            val payloads = arrayOf(reply)
-                            findNavController().navigate(
-                                SessionInitFragmentDirections.actionSessionToQrDisplay(payloads)
-                            )
-                        } else {
-                            // We are the initiator: session key derived. Keep our own QR visible so
-                            // the peer (who also called initSession) can still scan it.
-                            scanner?.stop()
-                            binding.previewView.visibility = View.GONE
-                            binding.ivQrCode.setImageBitmap(QrEncoder.encode(ownQrJson!!))
-                            binding.ivQrCode.visibility = View.VISIBLE
-                            binding.tvInstruction.setText(R.string.session_waiting_peer)
-                            binding.btnDone.visibility = View.VISIBLE
-                        }
-                    }
-                } catch (e: Exception) {
-                    Snackbar.make(requireView(), "Invalid QR: ${e.message}", Snackbar.LENGTH_LONG).show()
-                    scanner?.reset()
-                }
-            }
+            onResult = { raw -> handleScanResult(raw) }
         )
         scanner?.start()
+    }
+
+    private fun handleScanResult(raw: String) {
+        val app = requireActivity().application as BelugaApplication
+        try {
+            val msg = QrMessageParser.parse(raw) as? QrMessage.SessionInit ?: run {
+                Snackbar.make(requireView(), "Expected a session-init QR", Snackbar.LENGTH_SHORT).show()
+                scanner?.reset()
+                return
+            }
+            CoroutineScope(Dispatchers.Main).launch {
+                val reply = app.e2eSystem?.acceptSessionInit(args.userId, msg)
+                if (reply != null) {
+                    val payloads = arrayOf(reply)
+                    findNavController().navigate(
+                        SessionInitFragmentDirections.actionSessionToQrDisplay(payloads)
+                    )
+                } else {
+                    scanner?.stop()
+                    binding.previewView.visibility = View.GONE
+                    binding.ivQrCode.setImageBitmap(QrEncoder.encode(ownQrJson!!))
+                    binding.ivQrCode.visibility = View.VISIBLE
+                    binding.tvInstruction.setText(R.string.session_waiting_peer)
+                    binding.btnDone.visibility = View.VISIBLE
+                }
+            }
+        } catch (e: Exception) {
+            Snackbar.make(requireView(), "Invalid QR: ${e.message}", Snackbar.LENGTH_LONG).show()
+            scanner?.reset()
+        }
     }
 
     override fun onDestroyView() {

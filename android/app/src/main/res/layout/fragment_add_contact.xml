@@ -25,6 +25,14 @@
         android:layout_marginTop="16dp"
         android:text="@string/add_contact_scan"/>
 
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_pick_image"
+        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="@string/pick_from_gallery"/>
+
     <androidx.camera.view.PreviewView
         android:id="@+id/preview_view"
         android:layout_width="match_parent"

@@ -1,6 +1,7 @@
 package com.beluga.e2ee.qr
 
 import android.content.Context
+import android.net.Uri
 import androidx.camera.core.Camera
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
@@ -75,6 +76,34 @@ class QrScannerHelper(
 
     fun stop() {
         executor.shutdown()
+    }
+
+    companion object {
+        /**
+         * Decodes a QR code from a gallery/file URI without using the camera.
+         * No storage permission is required — the URI is obtained via the system picker.
+         */
+        fun scanFromUri(
+            context: Context,
+            uri: Uri,
+            onResult: (String) -> Unit,
+            onFailure: (Exception) -> Unit
+        ) {
+            val image = try {
+                InputImage.fromFilePath(context, uri)
+            } catch (e: Exception) {
+                onFailure(e)
+                return
+            }
+            BarcodeScanning.getClient()
+                .process(image)
+                .addOnSuccessListener { barcodes ->
+                    val raw = barcodes.firstOrNull { it.format == Barcode.FORMAT_QR_CODE }?.rawValue
+                    if (raw != null) onResult(raw)
+                    else onFailure(Exception("No QR code found in image"))
+                }
+                .addOnFailureListener { onFailure(it) }
+        }
     }
 
     @androidx.camera.core.ExperimentalGetImage

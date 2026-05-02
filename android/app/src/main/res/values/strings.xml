@@ -38,6 +38,8 @@
     <string name="share_key_title">My Public Key</string>
     <string name="share_key_label">Show this QR to your contact so they can add you.</string>
     <string name="error_no_session">No active session for this contact. Init session first.</string>
+    <string name="pick_from_gallery">Pick from Gallery</string>
+    <string name="pick_no_qr">No QR code found in that image.</string>
     <string name="btn_ok">OK</string>
     <string name="btn_cancel">Cancel</string>
     <string name="btn_next">Next</string>
