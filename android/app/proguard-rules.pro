@@ -1,0 +1,6 @@
+-keep class org.bouncycastle.** { *; }
+-dontwarn org.bouncycastle.**
+-keep class com.google.zxing.** { *; }
+-dontwarn com.google.zxing.**
+-keep class com.google.mlkit.** { *; }
+-dontwarn com.google.mlkit.**

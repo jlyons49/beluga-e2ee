@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Beluga</string>
+    <string name="unlock_title">Unlock Beluga</string>
+    <string name="unlock_hint">Password</string>
+    <string name="unlock_button">Unlock</string>
+    <string name="unlock_first_run">New identity created. Welcome to Beluga.</string>
+    <string name="unlock_wrong_password">Wrong password or corrupted database.</string>
+    <string name="home_receive">Receive QR</string>
+    <string name="home_send">Send Message</string>
+    <string name="home_session">Init Session</string>
+    <string name="home_share_key">Share Public Key</string>
+    <string name="home_contacts">Contacts</string>
+    <string name="contacts_title">Contacts</string>
+    <string name="contacts_empty">No contacts yet. Add one with the + button.</string>
+    <string name="contacts_delete_confirm">Remove this contact and their session key?</string>
+    <string name="add_contact_title">Add Contact</string>
+    <string name="add_contact_id_hint">Contact ID (e.g. alice)</string>
+    <string name="add_contact_scan">Scan Their Public Key QR</string>
+    <string name="session_init_title">Init Session</string>
+    <string name="session_show_qr">Show this QR to your contact, then tap Next to scan theirs.</string>
+    <string name="session_scan_reply">Now scan your contact\'s QR code.</string>
+    <string name="session_success">Session established.</string>
+    <string name="session_waiting_peer">Session ready. Keep this visible until your contact scans it, then tap Done.</string>
+    <string name="session_error_no_key">No public key for this contact. Add them first.</string>
+    <string name="session_error_verify">Signature verification failed. Aborting.</string>
+    <string name="send_title">Send Message</string>
+    <string name="send_contact_hint">Select contact</string>
+    <string name="send_message_hint">Message</string>
+    <string name="send_button">Encrypt &amp; Show QR</string>
+    <string name="qr_display_title">QR Code</string>
+    <string name="qr_display_prev">Prev</string>
+    <string name="qr_display_next">Next</string>
+    <string name="receive_title">Receive QR</string>
+    <string name="receive_contact_hint">Sender contact ID</string>
+    <string name="receive_scan_button">Start Scan</string>
+    <string name="receive_decrypted_title">Decrypted Message</string>
+    <string name="share_key_title">My Public Key</string>
+    <string name="share_key_label">Show this QR to your contact so they can add you.</string>
+    <string name="error_no_session">No active session for this contact. Init session first.</string>
+    <string name="btn_ok">OK</string>
+    <string name="btn_cancel">Cancel</string>
+    <string name="btn_next">Next</string>
+    <string name="btn_done">Done</string>
+</resources>

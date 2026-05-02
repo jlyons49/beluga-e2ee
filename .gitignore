@@ -3,3 +3,29 @@ tests
 
 *.json
 *.png
+
+# Android build outputs
+android/build/
+android/app/build/
+android/.gradle/
+
+# Gradle wrapper jar (downloaded on first sync)
+android/gradle/wrapper/gradle-wrapper.jar
+
+# Android Studio local config (machine-specific)
+android/local.properties
+android/.idea/caches/
+android/.idea/libraries/
+android/.idea/modules.xml
+android/.idea/navEditor.xml
+android/.idea/assetWizardSettings.xml
+
+# Generated module files
+android/**/*.iml
+
+# Android Studio captures and profiling
+android/captures/
+
+# Signing keystores — never commit private keys
+*.jks
+*.keystore
