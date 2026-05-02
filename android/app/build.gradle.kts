@@ -4,6 +4,8 @@ plugins {
     alias(libs.plugins.navigation.safeargs)
 }
 
+base.archivesName = "beluga"
+
 android {
     namespace = "com.beluga.e2ee"
     compileSdk = 35
