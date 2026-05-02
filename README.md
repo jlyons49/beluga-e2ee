@@ -43,13 +43,43 @@ A full Android port of the Python client, written in Kotlin. Provides the same c
 #### Android Requirements
 
 - Android 8.0 (API 26) or higher
-- Android Studio (to build from source)
+- Android Studio Ladybug (2024.2) or newer, **or** JDK 17+ with the Android SDK for command-line builds
+- Gradle 8.10+ (the wrapper in `android/gradle/wrapper/` downloads this automatically)
 
-#### Building
+#### Dependencies
+
+All dependencies are managed by Gradle and downloaded automatically on first build. No manual installation is required.
+
+| Library | Version | Purpose |
+| --- | --- | --- |
+| BouncyCastle `bcprov-jdk18on` | 1.80 | ECDH, ECDSA, P-384 curve operations |
+| ZXing core | 3.5.3 | QR code generation |
+| ML Kit barcode-scanning | 17.3.0 | QR code scanning via camera |
+| CameraX | 1.4.2 | Camera preview and frame capture |
+| AndroidX Security Crypto | 1.1.0-alpha06 | Keystore-backed `EncryptedSharedPreferences` (salt storage) |
+| AndroidX Navigation | 2.8.9 | Fragment navigation and Safe Args |
+| AndroidX Lifecycle | 2.8.7 | ViewModel / LiveData |
+| Kotlin Coroutines | 1.10.1 | Async crypto and I/O operations |
+
+#### Building from Android Studio
 
 1. Open the `android/` directory in Android Studio
 2. Allow Gradle to sync and download dependencies
-3. Build and deploy to a device or emulator (`Run > Run 'app'`)
+3. Connect a device or start an emulator
+4. Run `Run > Run 'app'` — the debug APK (`beluga-debug.apk`) is deployed automatically
+
+#### Building from the command line
+
+```bash
+cd android
+./gradlew assembleDebug          # debug APK → app/build/outputs/apk/debug/beluga-debug.apk
+./gradlew assembleRelease        # release APK (unsigned without signing config)
+./gradlew test                   # unit tests (crypto, Base85, HKDF)
+```
+
+#### Pre-built releases
+
+Signed release APKs are published automatically to [GitHub Releases](../../releases) when a version tag is pushed. Download `beluga-release.apk`, enable **Install unknown apps** for your file manager, and install directly.
 
 #### Security improvements over the Python client
 
