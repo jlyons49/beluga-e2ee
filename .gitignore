@@ -16,6 +16,7 @@ android/gradle/wrapper/gradle-wrapper.jar
 android/local.properties
 android/.idea/caches/
 android/.idea/libraries/
+android/.idea/misc.xml
 android/.idea/modules.xml
 android/.idea/navEditor.xml
 android/.idea/assetWizardSettings.xml
